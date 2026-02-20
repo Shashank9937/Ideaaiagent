@@ -23,6 +23,13 @@ class Settings(BaseSettings):
             "database_url",
         )
     )
+    database_password: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "DATABASE_PASSWORD",
+            "database_password",
+        )
+    )
     cors_origins: list[str] = ["http://localhost:3000"]
 
     openai_api_key: str | None = None
