@@ -95,19 +95,17 @@ class Settings(BaseSettings):
 
 
 @lru_cache
-
 def get_settings() -> Settings:
-    supabase_override = os.getenv("SUPABASE_DATABASE_URL", "").strip()
-    loaded = Settings(database_url=supabase_override) if supabase_override else Settings()
-
-    parsed = urlparse(loaded.database_url)
+    settings = Settings()
+    
+    parsed = urlparse(settings.database_url)
     logger.warning(
         "Database target resolved: user=%s host=%s port=%s",
         parsed.username,
         parsed.hostname,
         parsed.port,
     )
-    return loaded
+    return settings
 
 
 settings = get_settings()
