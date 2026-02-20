@@ -1,0 +1,898 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Narayan Enterprises</title>
+  <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+
+<body>
+  <header class="site-header">
+    <a href="#" id="brandLink" class="brand-wrap" title="Go to Overview"
+      aria-label="Narayan Enterprises - Go to Overview">
+      <img src="/logo.svg" alt="Narayan Enterprises Logo" class="brand-logo" />
+      <div>
+        <h1>Narayan Enterprises</h1>
+        <p>Operations Control Center</p>
+      </div>
+    </a>
+    <div class="header-actions">
+      <button id="darkModeToggle" class="small theme-toggle" title="Toggle dark mode"
+        aria-label="Toggle dark mode">☀</button>
+      <div id="sessionBar" class="session-bar hidden">
+        <span id="userMeta"></span>
+        <button id="logoutBtn" class="small danger">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <section id="loginPanel" class="panel login-panel">
+    <div class="login-logo-wrap">
+      <img src="/logo.svg" alt="Narayan Enterprises" class="login-logo" />
+      <h2>Operations Control Center</h2>
+    </div>
+    <form id="loginForm">
+      <input name="username" placeholder="Username" required />
+      <input name="password" type="password" placeholder="Password" required />
+      <button type="submit">Login</button>
+    </form>
+    <p class="hint">Demo users: admin/admin123, accountant/account123, manager/manager123</p>
+  </section>
+
+  <section id="appContent" class="hidden app-shell">
+    <nav class="section-nav" id="sectionNav">
+      <button class="nav-btn active" data-target="overviewSection">Overview</button>
+      <button class="nav-btn" data-target="employeeSection">Employees</button>
+      <button class="nav-btn" data-target="attendanceSection">Attendance</button>
+      <button class="nav-btn" data-target="salarySection">Salary</button>
+      <button class="nav-btn" data-target="truckSection">Trucks</button>
+      <button class="nav-btn" data-target="expenseSection">Expenses</button>
+      <button class="nav-btn" data-target="investmentSection">Investments</button>
+      <button class="nav-btn" data-target="chiniSection">Chini Mill</button>
+      <button class="nav-btn" data-target="landSection">Land</button>
+      <button class="nav-btn" data-target="vehicleSection">Vehicles</button>
+      <button class="nav-btn" data-target="supplierSection">Suppliers</button>
+      <button class="nav-btn" data-target="billingSection">Billing</button>
+      <button class="nav-btn" data-target="settingsSection">Settings</button>
+    </nav>
+
+    <section id="overviewSection" class="section-view active-view">
+      <div id="lastRefreshedWrap" class="last-refreshed-wrap hidden">
+        <span id="lastRefreshed">Last refreshed: —</span>
+        <button id="manualRefreshBtn" class="small">Refresh</button>
+      </div>
+      <section class="cards" id="cards"></section>
+    </section>
+
+    <section id="employeeSection" class="section-view">
+      <div class="grid">
+        <section class="panel" id="employeePanel">
+          <h2>Add Employee</h2>
+          <form id="employeeForm">
+            <input name="name" placeholder="Employee Name" required />
+            <input name="role" placeholder="Role" required />
+            <input name="monthlySalary" type="number" min="1" step="0.01" placeholder="Monthly Salary" required />
+            <label for="employeeJoiningDate">Joining Date</label>
+            <input id="employeeJoiningDate" name="joiningDate" type="date" required />
+            <button type="submit">Add Employee</button>
+          </form>
+        </section>
+      </div>
+
+      <section class="panel" id="employeeListPanel">
+        <div class="row wrap">
+          <h2>Employee Directory</h2>
+          <div class="row">
+            <input id="employeeSearchInput" class="wide-input" type="text" placeholder="Search by name/role..." />
+          </div>
+        </div>
+        <div id="employeeGrid" class="employee-grid">
+          <!-- Cards will be injected here -->
+        </div>
+      </section>
+    </section>
+
+    <section id="attendanceSection" class="section-view">
+      <div class="grid">
+        <section class="panel" id="attendancePanel">
+          <h2>Mark Attendance</h2>
+          <form id="attendanceForm">
+            <select name="employeeId" id="attendanceEmployee" required></select>
+            <input name="date" type="date" required />
+            <select name="status" required>
+              <option value="present">Present</option>
+              <option value="absent">Absent</option>
+            </select>
+            <button type="submit">Save Attendance</button>
+          </form>
+        </section>
+      </div>
+
+      <section class="panel" id="attendanceReportPanel">
+        <div class="row wrap">
+          <h2>Monthly Attendance Report</h2>
+          <div class="row">
+            <input id="attendanceMonthInput" type="month" />
+            <button id="refreshAttendanceReport" class="small">Load</button>
+            <button id="downloadAttendanceCsv" class="small">Download Attendance CSV</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table id="attendanceReportTable">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Role</th>
+                <th>Present Days</th>
+                <th>Absent Days</th>
+                <th>Total Marked</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+    <section id="salarySection" class="section-view">
+      <div class="grid">
+        <section class="panel" id="advancePanel">
+          <h2>Salary Advance</h2>
+          <form id="advanceForm">
+            <select name="employeeId" id="advanceEmployee" required></select>
+            <input name="date" type="date" required />
+            <input name="amount" type="number" min="1" step="0.01" placeholder="Advance Amount" required />
+            <input name="note" placeholder="Note (optional)" />
+            <button type="submit">Add Advance</button>
+          </form>
+        </section>
+      </div>
+
+      <section class="panel" id="salaryPanel">
+        <div class="row">
+          <h2>Salary Summary</h2>
+          <div class="row">
+            <input id="salaryMonthInput" type="month" />
+            <button id="downloadSalaryCsv" class="small">Download Salary CSV</button>
+          </div>
+        </div>
+        <div class="salary-summary-grid">
+          <section class="summary-box">
+            <div class="row wrap">
+              <h3>Selected Employee Summary</h3>
+              <select id="salaryEmployeeSelect"></select>
+            </div>
+            <div id="salaryEmployeeSummary" class="summary-stats"></div>
+          </section>
+          <section class="summary-box">
+            <h3>All Employees Summary</h3>
+            <div id="salaryOverallSummary" class="summary-stats"></div>
+          </section>
+        </div>
+        <div class="table-wrap">
+          <table id="salaryTable">
+            <thead>
+              <tr>
+                <th>Employee / Role</th>
+                <th>Status</th>
+                <th>Monthly</th>
+                <th>Advances / Progress</th>
+                <th>Remaining (Month)</th>
+                <th>Months</th>
+                <th>Total Earned</th>
+                <th>Total Adv</th>
+                <th>Slip</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel" id="salaryLedgerPanel">
+        <h2>Salary Ledger (Separate From Monthly Advances)</h2>
+        <form id="salaryLedgerForm" class="salary-ledger-form">
+          <select name="employeeId" id="salaryLedgerEmployee" required></select>
+          <input name="totalPaid" type="number" min="0" step="0.01" placeholder="Total Paid (All Time)" required />
+          <input name="totalToGive" type="number" min="0" step="0.01" placeholder="Total To Give (All Time)" required />
+          <div class="hint">Remaining: <strong id="salaryLedgerRemainingPreview">₹0</strong></div>
+          <input name="note" placeholder="Note (optional)" />
+          <button type="submit">Save Salary Ledger</button>
+        </form>
+        <div class="summary-stat-grid">
+          <div class="summary-stat">
+            <div class="label">Sum Total Paid (All Employees)</div>
+            <div id="salaryLedgerTotalPaidSum" class="value">₹0</div>
+          </div>
+          <div class="summary-stat">
+            <div class="label">Sum Total To Give (All Employees)</div>
+            <div id="salaryLedgerTotalToGiveSum" class="value">₹0</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table id="salaryLedgerTable">
+            <thead>
+                <tr>
+                  <th>Employee</th>
+                  <th>Role</th>
+                  <th>Date</th>
+                  <th>Total Salary</th>
+                  <th>Total Paid</th>
+                  <th>Total To Give</th>
+                  <th>Remaining</th>
+                <th>Note</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+    <section id="truckSection" class="section-view">
+      <div class="grid">
+        <section class="panel" id="truckPanel">
+          <h2>Truck / Raw Material Entry</h2>
+          <form id="truckForm">
+            <input name="date" type="date" required />
+            <select name="party" required>
+              <option value="">Select Party</option>
+              <option value="narayan">Narayan</option>
+              <option value="maa_vaishno">Maa Vaishno</option>
+            </select>
+            <input name="truckNumber" placeholder="Truck Number" required />
+            <input name="driverName" placeholder="Driver Name" />
+            <input name="rawMaterial" list="rawMaterialOptions" placeholder="Raw Material (e.g. Pellets)" required />
+            <datalist id="rawMaterialOptions">
+              <option value="Pellets"></option>
+              <option value="Briquettes"></option>
+            </datalist>
+            <input name="client" placeholder="Supplied To (Client Name)" />
+            <input name="quantity" type="number" min="0.01" step="0.01" placeholder="Quantity (quintals)" required />
+            <input name="pricePerQuintal" type="number" min="0" step="0.01" placeholder="Price per Quintal"
+              id="truckPricePerQuintal" />
+            <div class="truck-total-row">
+              <label for="truckTotalAmount">Total Amount</label>
+              <output id="truckTotalAmount" class="truck-total-output">—</output>
+            </div>
+            <input name="origin" placeholder="Origin" />
+            <input name="destination" placeholder="Destination" />
+            <input name="notes" placeholder="Notes" />
+            <button type="submit">Add Truck Entry</button>
+          </form>
+        </section>
+      </div>
+
+      <section class="panel" id="truckReportPanel">
+        <div class="row wrap">
+          <h2>Truck Report</h2>
+          <div class="row">
+            <input id="truckSearchInput" type="text" placeholder="Search truck/material/driver" />
+            <button id="downloadTruckCsv" class="small">Download Truck CSV</button>
+          </div>
+        </div>
+        <div class="summary-stat-grid mb-lg">
+          <div class="summary-stat">
+            <div class="label">Total Pellets Sold</div>
+            <div id="truckPelletTotal" class="value">0 Qntl</div>
+          </div>
+          <div class="summary-stat">
+            <div class="label">Total Briquettes Sold</div>
+            <div id="truckBriquetteTotal" class="value">0 Qntl</div>
+          </div>
+          <div class="summary-stat">
+            <div class="label">Pellets Revenue</div>
+            <div id="truckPelletRevenue" class="value money">₹0</div>
+          </div>
+          <div class="summary-stat">
+            <div class="label">Briquettes Revenue</div>
+            <div id="truckBriquetteRevenue" class="value money">₹0</div>
+          </div>
+        </div>
+        <div id="truckPartyTotals" class="truck-party-totals"></div>
+        <div class="party-table-grid">
+          <div>
+            <h3>Narayan Trucks</h3>
+            <div class="table-wrap">
+              <table id="truckTableNarayan">
+                <thead>
+                  <tr>
+                    <th>No.</th>
+                    <th>Date</th>
+                    <th>Truck</th>
+                    <th>Driver</th>
+                    <th>Material</th>
+                    <th>Qty (Qntl)</th>
+                    <th>Price/Qntl</th>
+                    <th>Total</th>
+                    <th>Origin</th>
+                    <th>Destination</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <h3>Maa Vaishno Trucks</h3>
+            <div class="table-wrap">
+              <table id="truckTableMaaVaishno">
+                <thead>
+                  <tr>
+                    <th>No.</th>
+                    <th>Date</th>
+                    <th>Truck</th>
+                    <th>Driver</th>
+                    <th>Material</th>
+                    <th>Qty (Qntl)</th>
+                    <th>Price/Qntl</th>
+                    <th>Total</th>
+                    <th>Origin</th>
+                    <th>Destination</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section id="expenseSection" class="section-view">
+      <div class="grid">
+        <section class="panel" id="expensePanel">
+          <h2>Add Expense</h2>
+          <form id="expenseForm">
+            <input name="date" type="date" required />
+            <select name="party" required>
+              <option value="">Select Party</option>
+              <option value="narayan">Narayan</option>
+              <option value="maa_vaishno">Maa Vaishno</option>
+            </select>
+            <input name="description" placeholder="Description" />
+            <input name="amount" type="number" min="0.01" step="0.01" placeholder="Amount (₹)" required />
+            <button type="submit">Add Expense</button>
+          </form>
+        </section>
+      </div>
+
+      <section class="panel" id="expenseReportPanel">
+        <div class="row wrap">
+          <h2>Expense Report (Party + Date Range)</h2>
+          <div class="row">
+            <input id="expenseDateFrom" type="date" />
+            <input id="expenseDateTo" type="date" />
+            <button id="expenseFilterBtn" class="small" type="button">Apply</button>
+            <button id="expenseClearBtn" class="small warn" type="button">Clear</button>
+          </div>
+        </div>
+        <div class="summary-stat-grid">
+          <div class="summary-stat">
+            <div class="label">Narayan Expense</div>
+            <div id="expenseTotalNarayan" class="value">₹0</div>
+          </div>
+          <div class="summary-stat">
+            <div class="label">Maa Vaishno Expense</div>
+            <div id="expenseTotalMaaVaishno" class="value">₹0</div>
+          </div>
+          <div class="summary-stat">
+            <div class="label">Total Expense</div>
+            <div id="expenseTotal" class="value">₹0</div>
+          </div>
+        </div>
+        <div class="party-table-grid">
+          <div>
+            <h3>Narayan Expenses</h3>
+            <div class="table-wrap">
+              <table id="expenseTableNarayan">
+                <thead>
+                  <tr>
+                    <th>No.</th>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <h3>Maa Vaishno Expenses</h3>
+            <div class="table-wrap">
+              <table id="expenseTableMaaVaishno">
+                <thead>
+                  <tr>
+                    <th>No.</th>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section id="investmentSection" class="section-view">
+      <div class="grid">
+        <section class="panel" id="investmentPanel">
+          <h2>Add Investment (Narayan / Maa Vaishno)</h2>
+          <form id="investmentForm">
+            <input name="date" type="date" required />
+            <select name="party" required>
+              <option value="">Select Party</option>
+              <option value="narayan">Narayan</option>
+              <option value="maa_vaishno">Maa Vaishno</option>
+            </select>
+            <input name="amount" type="number" min="0.01" step="0.01" placeholder="Investment Amount (₹)" required />
+            <input name="note" placeholder="Note (optional)" />
+            <button type="submit">Add Investment</button>
+          </form>
+        </section>
+      </div>
+
+      <section class="panel" id="investmentSummaryPanel">
+        <div class="summary-stat-grid">
+          <div class="summary-stat">
+            <div class="label">Narayan Investment</div>
+            <div id="invNarayanInvestment" class="value">₹0</div>
+          </div>
+          <div class="summary-stat">
+            <div class="label">Narayan Expense</div>
+            <div id="invNarayanExpense" class="value">₹0</div>
+          </div>
+          <div class="summary-stat">
+            <div class="label">Narayan Truck Sales</div>
+            <div id="invNarayanTruckSales" class="value">₹0</div>
+          </div>
+          <div class="summary-stat">
+            <div class="label">Narayan Balance (Investment + Expense - Truck)</div>
+            <div id="invNarayanNet" class="value">₹0</div>
+          </div>
+          <div class="summary-stat">
+            <div class="label">Maa Vaishno Investment</div>
+            <div id="invMaaInvestment" class="value">₹0</div>
+          </div>
+          <div class="summary-stat">
+            <div class="label">Maa Vaishno Expense</div>
+            <div id="invMaaExpense" class="value">₹0</div>
+          </div>
+          <div class="summary-stat">
+            <div class="label">Maa Vaishno Truck Sales</div>
+            <div id="invMaaTruckSales" class="value">₹0</div>
+          </div>
+          <div class="summary-stat">
+            <div class="label">Maa Vaishno Balance (Investment + Expense - Truck)</div>
+            <div id="invMaaNet" class="value">₹0</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table id="investmentTable">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Party</th>
+                <th>Amount</th>
+                <th>Note</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+    <section id="chiniSection" class="section-view">
+      <div class="grid">
+        <section class="panel" id="chiniPanel">
+          <h2>Add Chini Mill Expense</h2>
+          <form id="chiniForm">
+            <input name="date" type="date" required />
+            <select name="party" required>
+              <option value="">Select Party</option>
+              <option value="narayan">Narayan</option>
+              <option value="maa_vaishno">Maa Vaishno</option>
+            </select>
+            <input name="description" placeholder="Description" />
+            <input name="amount" type="number" min="0.01" step="0.01" placeholder="Amount (₹)" required />
+            <button type="submit">Add Chini Expense</button>
+          </form>
+        </section>
+      </div>
+
+      <section class="panel" id="chiniReportPanel">
+        <div class="truck-party-totals" id="chiniPartyTotals"></div>
+        <div class="table-wrap">
+          <table id="chiniTable">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Party</th>
+                <th>Description</th>
+                <th>Amount</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+    <section id="landSection" class="section-view">
+      <div class="grid">
+        <section class="panel" id="landPanel">
+          <h2>Add Land Record</h2>
+          <form id="landForm">
+            <input name="area" placeholder="Area (e.g. 2.5 acres)" required />
+            <input name="ownerName" placeholder="Owner Name" required />
+            <input name="amountPaid" type="number" min="0" step="0.01" placeholder="Amount Paid (₹)" required />
+            <input name="amountToBeGiven" type="number" min="0" step="0.01" placeholder="Amount To Be Given (₹)"
+              required />
+            <button type="submit">Add Land Record</button>
+          </form>
+        </section>
+      </div>
+
+      <section class="panel" id="landReportPanel">
+        <div class="summary-stat-grid">
+          <div class="summary-stat">
+            <div class="label">Land Paid Total</div>
+            <div id="landTotalPaid" class="value">₹0</div>
+          </div>
+          <div class="summary-stat">
+            <div class="label">Land Remaining Total</div>
+            <div id="landTotalRemaining" class="value">₹0</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table id="landTable">
+            <thead>
+              <tr>
+                <th>Area</th>
+                <th>Owner Name</th>
+                <th>Amount Paid</th>
+                <th>Amount To Be Given</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+    <section id="vehicleSection" class="section-view">
+      <div class="grid">
+        <section class="panel" id="vehiclePanel">
+          <h2>Vehicle Usage & Monthly Tracking</h2>
+          <form id="vehicleForm">
+            <input name="vehicleName" placeholder="Vehicle Name (e.g. Tractor, Truck)" required />
+            <input name="vehicleNumber" placeholder="Vehicle Number" required />
+            <input name="monthlyPrice" type="number" min="0" step="0.01" placeholder="Monthly Price (₹)" required />
+            <input name="serviceDueDate" type="date" placeholder="Service Due Date" />
+            <input name="lastServiceDate" type="date" placeholder="Last Service Date" />
+            <select name="paymentStatus">
+              <option value="pending">Payment Pending</option>
+              <option value="partial">Payment Partial</option>
+              <option value="paid">Payment Paid</option>
+            </select>
+            <input name="amountPaid" type="number" min="0" step="0.01" placeholder="Amount Paid (₹)" />
+            <input name="note" placeholder="Service/Payment Note" />
+            <button type="submit">Add Vehicle Track</button>
+          </form>
+        </section>
+      </div>
+
+      <section class="panel" id="vehicleReportPanel">
+        <div class="summary-stat-grid">
+          <div class="summary-stat">
+            <div class="label">Total Monthly Price</div>
+            <div id="vehicleMonthlyTotal" class="value">₹0</div>
+          </div>
+          <div class="summary-stat">
+            <div class="label">Total Paid</div>
+            <div id="vehiclePaidTotal" class="value">₹0</div>
+          </div>
+          <div class="summary-stat">
+            <div class="label">Total Pending</div>
+            <div id="vehiclePendingTotal" class="value">₹0</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table id="vehicleTable">
+            <thead>
+              <tr>
+                <th>Vehicle</th>
+                <th>Number</th>
+                <th>Monthly Price</th>
+                <th>Service Due</th>
+                <th>Last Service</th>
+                <th>Payment Status</th>
+                <th>Amount Paid</th>
+                <th>Note</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+    <section id="supplierSection" class="section-view">
+      <!-- Supplier List View -->
+      <div id="supplierListPanel" class="panel">
+        <div class="row wrap">
+          <h2>Supplier Management</h2>
+        </div>
+        <section id="supplierCreatePanel" class="panel supplier-form-panel">
+          <h3>Add Supplier</h3>
+          <form id="supplierForm" class="supplier-create-form">
+            <div class="supplier-form-grid two">
+              <input name="name" placeholder="Supplier Name" required />
+              <input name="phone" placeholder="Phone Number (for SMS)" />
+              <input name="alternatePhone" placeholder="Alternate Phone (optional)" />
+              <input name="email" type="email" placeholder="Email (optional)" />
+              <input name="gstNo" placeholder="GST No (optional)" />
+              <input name="materialType" placeholder="Main Material (e.g. Coal, Husk)" />
+              <input name="openingBalance" type="number" step="0.01" value="0" placeholder="Opening Balance" />
+              <input name="paymentTerms" placeholder="Payment Terms (e.g. weekly)" />
+            </div>
+            <textarea name="address" placeholder="Supplier Address"></textarea>
+            <button type="submit">Add Supplier</button>
+          </form>
+        </section>
+        <div id="supplierGrid" class="employee-grid">
+          <!-- Supplier Cards Injected Here -->
+        </div>
+      </div>
+
+      <!-- Supplier Detail View (Hidden by default) -->
+      <div id="supplierDetailPanel" class="panel hidden">
+        <div class="row wrap">
+          <button id="backToSuppliersBtn" class="small">← Back</button>
+          <h2 id="supplierDetailName">Supplier Name</h2>
+        </div>
+
+        <div class="summary-stat-grid mt-sm">
+          <div class="summary-stat">
+            <div class="label">Total Material Value</div>
+            <div id="supTotalMaterial" class="value">₹0</div>
+          </div>
+          <div class="summary-stat">
+            <div class="label">Total Paid</div>
+            <div id="supTotalPaid" class="value">₹0</div>
+          </div>
+          <div class="summary-stat">
+            <div class="label">Pending Balance</div>
+            <div id="supPendingBalance" class="value pending-value">₹0</div>
+          </div>
+        </div>
+
+        <div class="grid supplier-layout mt-lg">
+          <!-- Add Transaction Form -->
+          <section class="panel supplier-form-panel">
+            <h3>Add Transaction</h3>
+            <form id="supplierTransactionForm">
+              <input type="hidden" name="supplierId" id="txSupplierId" />
+              <input name="date" type="date" required />
+              <select name="type" id="txType" required>
+                <option value="truck">🚛 Material (Truck)</option>
+                <option value="payment">💰 Payment</option>
+              </select>
+
+              <div id="txTruckFields">
+                <input name="truckNumber" placeholder="Truck Number" />
+                <input name="challanNo" placeholder="Challan Number" />
+                <input name="material" placeholder="Material (e.g. Coal)" />
+                <div class="row">
+                  <input name="quantity" type="number" step="0.01" placeholder="Qty" />
+                  <input name="rate" type="number" step="0.01" placeholder="Rate" />
+                </div>
+              </div>
+
+              <div class="row">
+                <input name="amount" type="number" step="0.01" placeholder="Total Amount (₹)" required />
+                <input id="txPaidNow" name="paidNow" type="number" step="0.01" placeholder="Paid Now (₹)" value="0" />
+              </div>
+              <div id="txPaymentMetaFields" class="row wrap">
+                <select name="paymentMode">
+                  <option value="">Payment Mode</option>
+                  <option value="cash">Cash</option>
+                  <option value="upi">UPI</option>
+                  <option value="bank_transfer">Bank Transfer</option>
+                  <option value="cheque">Cheque</option>
+                </select>
+                <input name="paymentRef" placeholder="Payment Ref / UTR / Cheque No" />
+              </div>
+              <input name="note" placeholder="Note (optional)" />
+              <label class="inline-check">
+                <input name="sendSms" type="checkbox" value="1" checked />
+                Send SMS update to supplier
+              </label>
+              <button type="submit">Add Entry</button>
+            </form>
+          </section>
+
+          <!-- Transaction History -->
+          <section>
+            <div class="table-wrap">
+              <table id="supplierTxTable">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Details</th>
+                    <th>Amount</th>
+                    <th>Balance</th>
+                    <th>Receipt</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <section id="billingSection" class="section-view">
+      <div class="grid">
+        <section class="panel" id="billPanel">
+          <h2>GST Bill Generator</h2>
+          <form id="billForm">
+            <div class="bill-grid two">
+              <input name="invoiceNo" placeholder="Invoice No (e.g. NE/2026/001)" required />
+              <input name="billDate" type="date" required />
+              <input name="dueDate" type="date" />
+              <input name="vehicleNo" placeholder="Vehicle No (optional)" />
+            </div>
+
+            <div class="bill-grid three">
+              <input id="billCompanyGstNo" name="gstNo" placeholder="Buyer GST No" maxlength="15" required />
+              <button id="billGstLookupBtn" type="button" class="small">Auto Fill by GST</button>
+              <input id="billPlaceOfSupply" name="placeOfSupply" placeholder="Place of Supply" />
+            </div>
+
+            <div class="bill-grid two">
+              <input id="billCompanyName" name="companyName" placeholder="Buyer Company Name" required />
+              <input id="billCompanyContact" name="contactPerson" placeholder="Contact Person" />
+              <input id="billCompanyPhone" name="phone" placeholder="Phone" />
+              <input id="billCompanyEmail" name="email" placeholder="Email" />
+            </div>
+            <textarea id="billCompanyAddress" name="address" placeholder="Buyer Address" required></textarea>
+            <div class="bill-grid two">
+              <input id="billCompanyState" name="state" placeholder="State" />
+              <input id="billCompanyStateCode" name="stateCode" placeholder="State Code" />
+            </div>
+
+            <div class="row wrap">
+              <h3>Bill Items</h3>
+              <button id="addBillItemBtn" type="button" class="small">+ Add Item</button>
+            </div>
+            <div class="table-wrap">
+              <table id="billItemsTable">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Description</th>
+                    <th>HSN/SAC</th>
+                    <th>Unit</th>
+                    <th>Qty</th>
+                    <th>Rate</th>
+                    <th>GST %</th>
+                    <th>Taxable</th>
+                    <th>Line Total</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="billItemsTbody"></tbody>
+              </table>
+            </div>
+
+            <div class="billing-totals">
+              <div class="summary-stat">
+                <div class="label">Subtotal</div>
+                <div id="billSubtotal" class="value">₹0</div>
+              </div>
+              <div class="summary-stat">
+                <div class="label">Total GST</div>
+                <div id="billTotalGst" class="value">₹0</div>
+              </div>
+              <div class="summary-stat">
+                <div class="label">Grand Total</div>
+                <div id="billGrandTotal" class="value">₹0</div>
+              </div>
+            </div>
+
+            <textarea name="notes" id="billNotes" placeholder="Notes (optional)"></textarea>
+            <label class="inline-check">
+              <input name="reverseCharge" type="checkbox" />
+              Reverse Charge Applicable
+            </label>
+            <div class="row wrap">
+              <button id="billSubmitBtn" type="submit">Save Bill & Generate PDF</button>
+              <button id="cancelBillEditBtn" type="button" class="small warn hidden">Cancel Edit</button>
+            </div>
+          </form>
+        </section>
+      </div>
+
+      <section class="panel" id="billReportPanel">
+        <div class="row wrap">
+          <h2>Generated Bills</h2>
+          <input id="billSearchInput" type="text" placeholder="Search invoice / company / GST" class="wide-input" />
+        </div>
+        <div class="table-wrap">
+          <table id="billTable">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Invoice</th>
+                <th>Company</th>
+                <th>GST No</th>
+                <th>Subtotal</th>
+                <th>Total GST</th>
+                <th>Grand Total</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel" id="billCompanyPanel">
+        <h2>Saved GST Companies</h2>
+        <div class="table-wrap">
+          <table id="billCompanyTable">
+            <thead>
+              <tr>
+                <th>GST No</th>
+                <th>Company</th>
+                <th>Contact</th>
+                <th>Phone</th>
+                <th>State</th>
+                <th>Address</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+    <section id="settingsSection" class="section-view">
+      <section class="panel" id="changePasswordPanel">
+        <h2>Change Password</h2>
+        <form id="changePasswordForm">
+          <input name="currentPassword" type="password" placeholder="Current Password" required />
+          <input name="newPassword" type="password" placeholder="New Password (min 8 chars)" required />
+          <button type="submit">Update Password</button>
+        </form>
+      </section>
+    </section>
+  </section>
+
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <script src="/app.js"></script>
+</body>
+
+</html>

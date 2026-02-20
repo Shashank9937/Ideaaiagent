@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 222 47% 6%;
+  --foreground: 210 20% 97%;
+  --card: 220 36% 10%;
+  --card-foreground: 210 20% 96%;
+  --border: 215 30% 21%;
+  --muted: 220 25% 17%;
+  --muted-foreground: 214 14% 70%;
+  --accent: 182 70% 19%;
+  --accent-foreground: 174 100% 92%;
+  --primary: 173 80% 42%;
+  --primary-foreground: 200 100% 5%;
+}
+
+* {
+  @apply border-border;
+}
+
+body {
+  @apply bg-background text-foreground antialiased;
+  background-image:
+    radial-gradient(circle at 18% 0%, rgba(34, 211, 238, 0.12), transparent 40%),
+    radial-gradient(circle at 100% 0%, rgba(16, 185, 129, 0.14), transparent 35%);
+  min-height: 100vh;
+}
+
+.font-heading {
+  font-family: var(--font-space-grotesk), sans-serif;
+}
+
+.font-mono {
+  font-family: var(--font-ibm-plex-mono), monospace;
+}

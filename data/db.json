@@ -1,0 +1,69 @@
+{
+  "employees": [
+    {
+      "id": "emp_1770820540463_8007",
+      "name": "Shubham",
+      "role": "Manager",
+      "monthlySalary": 15000,
+      "active": true,
+      "createdAt": "2026-02-11T14:35:40.463Z"
+    }
+  ],
+  "attendance": [
+    {
+      "id": "att_1770820546938_78951",
+      "employeeId": "emp_1770820540463_8007",
+      "date": "2026-02-11",
+      "status": "present",
+      "createdAt": "2026-02-11T14:35:46.938Z",
+      "updatedAt": "2026-02-11T14:35:48.731Z"
+    }
+  ],
+  "salaryAdvances": [
+    {
+      "id": "adv_1770820553646_99321",
+      "employeeId": "emp_1770820540463_8007",
+      "date": "2026-02-11",
+      "amount": 10000,
+      "note": "",
+      "createdAt": "2026-02-11T14:35:53.646Z"
+    },
+    {
+      "id": "adv_1770820560391_37506",
+      "employeeId": "emp_1770820540463_8007",
+      "date": "2026-02-11",
+      "amount": 1000,
+      "note": "",
+      "createdAt": "2026-02-11T14:36:00.391Z"
+    }
+  ],
+  "trucks": [],
+  "users": [
+    {
+      "id": "user_admin",
+      "username": "admin",
+      "passwordHash": "$2a$10$8vv2WRKgeXiyliCXK5xzaO3y.2j3X7Juj0YRqjN6XeVp2pfL.Bg5C",
+      "role": "admin"
+    },
+    {
+      "id": "user_acc",
+      "username": "accountant",
+      "passwordHash": "$2a$10$qZWaNN718JxlMHxNorBnKeMEdsY7g0q92ASVse2kKu8yjtPB/DjKq",
+      "role": "accountant"
+    },
+    {
+      "id": "user_mgr",
+      "username": "manager",
+      "passwordHash": "$2a$10$qanEmiqXB0Wi1I9tVNzhUeEHnGm1FuDmhuLFerwuqNu5fagzf73TC",
+      "role": "manager"
+    }
+  ],
+  "sessions": [
+    {
+      "token": "token_1770820499549_7822",
+      "userId": "user_admin",
+      "createdAt": "2026-02-11T14:34:59.553Z",
+      "expiresAt": "2026-02-12T02:34:59.549Z"
+    }
+  ]
+}

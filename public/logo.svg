@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Narayan Enterprises logo">
+  <defs>
+    <linearGradient id="bg" x1="8%" y1="8%" x2="92%" y2="92%">
+      <stop offset="0%" stop-color="#0f61ff" />
+      <stop offset="58%" stop-color="#1f79ff" />
+      <stop offset="100%" stop-color="#00a3d8" />
+    </linearGradient>
+    <radialGradient id="shine" cx="22%" cy="18%" r="70%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.44" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95" />
+      <stop offset="100%" stop-color="#d7ebff" stop-opacity="0.95" />
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="url(#bg)" />
+  <rect width="512" height="512" rx="112" fill="url(#shine)" />
+
+  <circle cx="424" cy="104" r="30" fill="#25d889" opacity="0.95" />
+  <circle cx="92" cy="408" r="18" fill="#cce9ff" opacity="0.75" />
+
+  <path d="M118 372V140h86l102 151V140h86v232h-86L204 220v152z" fill="url(#accent)" />
+  <rect x="222" y="96" width="68" height="16" rx="8" fill="#25d889" opacity="0.95" />
+</svg>

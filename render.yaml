@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: market-war-radar-api
+    env: docker
+    plan: starter
+    rootDir: .
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: API_V1_PREFIX
+        value: /api/v1
+      - key: ALLOW_ANON_READ
+        value: false
+      - key: DATABASE_URL
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4o-mini
+      - key: REDDIT_CLIENT_ID
+        sync: false
+      - key: REDDIT_CLIENT_SECRET
+        sync: false
+      - key: REDDIT_USER_AGENT
+        value: market-war-radar/1.0
+      - key: PRODUCTHUNT_ACCESS_TOKEN
+        sync: false
+      - key: TWITTER_BEARER_TOKEN
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false

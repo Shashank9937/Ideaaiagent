@@ -1,0 +1,15 @@
+{
+  "name": "company-ops-dashboard",
+  "version": "1.0.0",
+  "description": "Attendance, salary, and truck reporting app",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express": "^4.21.2",
+    "pg": "^8.13.3",
+    "pdfkit": "^0.15.2"
+  }
+}
