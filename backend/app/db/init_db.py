@@ -8,6 +8,17 @@ from app.models import admin_filter, cluster, idea, pain, post  # noqa: F401
 logger = logging.getLogger(__name__)
 
 
+def _is_auth_error(exc: Exception) -> bool:
+    text = f"{type(exc).__name__} {exc}".lower()
+    auth_markers = (
+        "invalidpassworderror",
+        "password authentication failed",
+        "too many authentication errors",
+        "circuit breaker open",
+    )
+    return any(marker in text for marker in auth_markers)
+
+
 async def init_db() -> None:
     retries = max(1, settings.db_init_retries)
     delay_seconds = max(0.5, settings.db_init_retry_delay_seconds)
@@ -21,7 +32,22 @@ async def init_db() -> None:
             return
         except Exception as exc:  # noqa: BLE001
             last_error = exc
-            logger.exception("Database initialization attempt %s/%s failed.", attempt, retries)
+
+            if _is_auth_error(exc):
+                logger.error(
+                    "Database authentication failed on attempt %s/%s. "
+                    "Check SUPABASE_DATABASE_URL user/password (or DATABASE_PASSWORD override).",
+                    attempt,
+                    retries,
+                )
+                break
+
+            logger.warning(
+                "Database initialization attempt %s/%s failed: %s",
+                attempt,
+                retries,
+                exc,
+            )
             if attempt < retries:
                 await asyncio.sleep(delay_seconds)
 

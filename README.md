@@ -197,6 +197,8 @@ docker compose up --build
 ### Backend -> Render
 - Use included `render.yaml`
 - Set secret env vars in Render dashboard
+- Required: `SUPABASE_DATABASE_URL`
+- Optional but recommended: `DATABASE_PASSWORD` (raw DB password without URL encoding)
 - Points to root `Dockerfile`
 
 ## Notes

@@ -15,6 +15,8 @@ services:
         value: false
       - key: SUPABASE_DATABASE_URL
         sync: false
+      - key: DATABASE_PASSWORD
+        sync: false
       - key: DB_INIT_RETRIES
         value: 10
       - key: DB_INIT_RETRY_DELAY_SECONDS
@@ -34,6 +36,8 @@ services:
       - key: PRODUCTHUNT_ACCESS_TOKEN
         sync: false
       - key: TWITTER_BEARER_TOKEN
+        sync: false
+      - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_JWT_SECRET
         sync: false

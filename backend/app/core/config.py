@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     database_url: str = Field(
         validation_alias=AliasChoices(
             "SUPABASE_DATABASE_URL",
+            "DATABASE_URL",
             "database_url",
         )
     )
@@ -27,8 +28,9 @@ class Settings(BaseSettings):
         default=None,
         validation_alias=AliasChoices(
             "DATABASE_PASSWORD",
+            "SUPABASE_DB_PASSWORD",
             "database_password",
-        )
+        ),
     )
     cors_origins: list[str] = ["http://localhost:3000"]
 
@@ -96,16 +98,17 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    settings = Settings()
-    
-    parsed = urlparse(settings.database_url)
+    supabase_override = os.getenv("SUPABASE_DATABASE_URL", "").strip()
+    loaded = Settings(database_url=supabase_override) if supabase_override else Settings()
+
+    parsed = urlparse(loaded.database_url)
     logger.warning(
         "Database target resolved: user=%s host=%s port=%s",
         parsed.username,
         parsed.hostname,
         parsed.port,
     )
-    return settings
+    return loaded
 
 
 settings = get_settings()
