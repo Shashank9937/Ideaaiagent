@@ -1,8 +1,13 @@
+import logging
+import os
 from functools import lru_cache
 from typing import Literal
+from urllib.parse import urlparse
 
 from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
@@ -84,7 +89,17 @@ class Settings(BaseSettings):
 @lru_cache
 
 def get_settings() -> Settings:
-    return Settings()
+    supabase_override = os.getenv("SUPABASE_DATABASE_URL", "").strip()
+    loaded = Settings(database_url=supabase_override) if supabase_override else Settings()
+
+    parsed = urlparse(loaded.database_url)
+    logger.info(
+        "Database target resolved: user=%s host=%s port=%s",
+        parsed.username,
+        parsed.hostname,
+        parsed.port,
+    )
+    return loaded
 
 
 settings = get_settings()
