@@ -20,7 +20,6 @@ class Settings(BaseSettings):
     database_url: str = Field(
         validation_alias=AliasChoices(
             "SUPABASE_DATABASE_URL",
-            "POSTGRES_URL",
             "database_url",
         )
     )
@@ -62,7 +61,7 @@ class Settings(BaseSettings):
     @classmethod
     def normalize_database_url(cls, value: str | None) -> str:
         if value is None or not str(value).strip():
-            raise ValueError("SUPABASE_DATABASE_URL (or POSTGRES_URL) is required")
+            raise ValueError("SUPABASE_DATABASE_URL is required")
 
         url = str(value).strip()
         if url.startswith("postgresql+asyncpg://"):
