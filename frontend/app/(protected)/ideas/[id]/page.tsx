@@ -1,14 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { getIdeaById } from "@/lib/api";
-import { createClient } from "@/lib/supabase/client";
 import type { Idea } from "@/lib/types";
 
 function Metric({ label, value }: { label: string; value: number }) {
@@ -25,23 +24,13 @@ function Metric({ label, value }: { label: string; value: number }) {
 
 export default function IdeaDetailPage() {
   const params = useParams<{ id: string }>();
-  const router = useRouter();
   const [idea, setIdea] = useState<Idea | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
-      const supabase = createClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) {
-        router.push("/login");
-        return;
-      }
-
       try {
-        const item = await getIdeaById(params.id, session.access_token);
+        const item = await getIdeaById(params.id);
         setIdea(item);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load idea");
@@ -51,7 +40,7 @@ export default function IdeaDetailPage() {
     if (params.id) {
       load();
     }
-  }, [params.id, router]);
+  }, [params.id]);
 
   if (error) {
     return <p className="text-sm text-rose-300">{error}</p>;

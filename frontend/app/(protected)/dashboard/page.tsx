@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
 import { AdminPanel } from "@/components/dashboard/admin-panel";
 import { ClusterCard } from "@/components/dashboard/cluster-card";
@@ -12,35 +11,20 @@ import { RevenueSummaryCard } from "@/components/dashboard/revenue-summary";
 import { TrendingSignals } from "@/components/dashboard/trending-signals";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAdminFilters, getDashboardOverview } from "@/lib/api";
-import { createClient } from "@/lib/supabase/client";
 import type { AdminFilters, DashboardOverview } from "@/lib/types";
 
 export default function DashboardPage() {
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [overview, setOverview] = useState<DashboardOverview | null>(null);
   const [filters, setFilters] = useState<AdminFilters | null>(null);
-  const [token, setToken] = useState<string | undefined>();
 
   useEffect(() => {
     const load = async () => {
-      const supabase = createClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session) {
-        router.push("/login");
-        return;
-      }
-
-      setToken(session.access_token);
-
       try {
         const [overviewData, filterData] = await Promise.all([
-          getDashboardOverview(session.access_token),
-          getAdminFilters(session.access_token).catch(() => null),
+          getDashboardOverview(),
+          getAdminFilters().catch(() => null),
         ]);
         setOverview(overviewData);
         setFilters(filterData);
@@ -52,7 +36,7 @@ export default function DashboardPage() {
     };
 
     load();
-  }, [router]);
+  }, []);
 
   if (isLoading) {
     return <p className="py-20 text-center text-muted-foreground">Loading intelligence dashboard...</p>;
@@ -101,7 +85,7 @@ export default function DashboardPage() {
 
         <div className="space-y-4">
           <QuickLaunchCard title={overview.quick_launch_plan.title} bullets={overview.quick_launch_plan.bullet_points} />
-          <AdminPanel accessToken={token} initialFilters={filters} />
+          <AdminPanel initialFilters={filters} />
         </div>
       </section>
     </div>

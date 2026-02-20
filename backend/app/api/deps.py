@@ -12,16 +12,12 @@ async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(security),
 ) -> dict:
     if credentials is None:
-        if settings.allow_anon_read:
-            return {"sub": "anonymous"}
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing auth token")
+        return {"sub": "anonymous"}
 
     token = credentials.credentials
 
     if not settings.supabase_jwt_secret:
-        if settings.allow_anon_read:
-            return {"sub": "anonymous"}
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Supabase JWT secret not set")
+        return {"sub": "anonymous"}
 
     try:
         payload = jwt.decode(
@@ -32,4 +28,6 @@ async def get_current_user(
         )
         return payload
     except JWTError as exc:
+        if settings.allow_anon_read:
+            return {"sub": "anonymous"}
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid auth token") from exc

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -9,28 +9,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getClusterById } from "@/lib/api";
-import { createClient } from "@/lib/supabase/client";
 import type { ClusterDetail } from "@/lib/types";
 
 export default function ClusterDetailPage() {
   const params = useParams<{ id: string }>();
-  const router = useRouter();
   const [data, setData] = useState<ClusterDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
-      const supabase = createClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) {
-        router.push("/login");
-        return;
-      }
-
       try {
-        const detail = await getClusterById(params.id, session.access_token);
+        const detail = await getClusterById(params.id);
         setData(detail);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load cluster");
@@ -40,7 +29,7 @@ export default function ClusterDetailPage() {
     if (params.id) {
       load();
     }
-  }, [params.id, router]);
+  }, [params.id]);
 
   if (error) {
     return <p className="text-sm text-rose-300">{error}</p>;
