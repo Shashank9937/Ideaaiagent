@@ -13,8 +13,14 @@ services:
         value: /api/v1
       - key: ALLOW_ANON_READ
         value: false
-      - key: DATABASE_URL
+      - key: SUPABASE_DATABASE_URL
         sync: false
+      - key: DB_INIT_RETRIES
+        value: 10
+      - key: DB_INIT_RETRY_DELAY_SECONDS
+        value: 3.0
+      - key: FAIL_ON_DB_INIT_ERROR
+        value: false
       - key: OPENAI_API_KEY
         sync: false
       - key: OPENAI_MODEL
