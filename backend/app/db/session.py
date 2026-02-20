@@ -74,6 +74,22 @@ def _build_engine_config(raw_database_url: str) -> tuple[str, dict]:
 
 normalized_database_url, engine_connect_args = _build_engine_config(settings.database_url)
 
+# Diagnostics
+print("\n" + "!"*60, flush=True)
+print("📢 DB CONNECTION DIAGNOSTICS", flush=True)
+from sqlalchemy.engine.url import make_url
+url_obj = make_url(normalized_database_url)
+pass_val = url_obj.password or ""
+pass_len = len(pass_val)
+pass_preview = f"{pass_val[0]}...{pass_val[-1]}" if pass_len > 2 else "TOO SHORT"
+print(f"Target: {url_obj.host}:{url_obj.port}", flush=True)
+print(f"User: {url_obj.username}", flush=True)
+print(f"Password Length: {pass_len}", flush=True)
+print(f"Password Preview: {pass_preview}", flush=True)
+if pass_val == "***":
+    print("🚨 WARNING: Your password is set to '***'. Re-enter it in Render!", flush=True)
+print("!"*60 + "\n", flush=True)
+
 engine = create_async_engine(
     normalized_database_url,
     connect_args=engine_connect_args,
