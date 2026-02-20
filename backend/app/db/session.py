@@ -17,6 +17,11 @@ def _build_engine_config(raw_database_url: str) -> tuple[str, dict]:
     This avoids prepared statement issues when using PgBouncer poolers.
     """
     parsed = make_url(raw_database_url)
+    
+    # If a separate password is provided, prioritize it
+    if settings.database_password:
+        parsed = parsed.set(password=settings.database_password)
+        
     query = dict(parsed.query)
     connect_args: dict = {}
 
