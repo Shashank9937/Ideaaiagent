@@ -1,26 +1,40 @@
 import type { AdminFilters, ClusterDetail, DashboardOverview, Idea, ProblemCluster } from "@/lib/types";
 
-const API_BASE_URL = "/api/v1";
+const API_BASE_CANDIDATES = [
+  "/api/v1",
+  process.env.NEXT_PUBLIC_API_BASE_URL,
+  process.env.NODE_ENV === "development" ? "http://localhost:8000/api/v1" : "https://ideaaiagent.onrender.com/api/v1",
+].filter((value): value is string => Boolean(value));
 
 async function apiRequest<T>(path: string, accessToken?: string, init?: RequestInit): Promise<T> {
-  const headers = new Headers(init?.headers);
-  headers.set("Content-Type", "application/json");
-  if (accessToken) {
-    headers.set("Authorization", `Bearer ${accessToken}`);
+  const errors: string[] = [];
+
+  for (const baseUrl of API_BASE_CANDIDATES) {
+    try {
+      const headers = new Headers(init?.headers);
+      headers.set("Content-Type", "application/json");
+      if (accessToken) {
+        headers.set("Authorization", `Bearer ${accessToken}`);
+      }
+
+      const res = await fetch(`${baseUrl}${path}`, {
+        ...init,
+        headers,
+        cache: "no-store",
+      });
+
+      if (res.ok) {
+        return (await res.json()) as T;
+      }
+
+      const text = await res.text();
+      errors.push(`${baseUrl}${path} -> ${res.status}${text ? `: ${text}` : ""}`);
+    } catch (error) {
+      errors.push(`${baseUrl}${path} -> ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
-  const res = await fetch(`${API_BASE_URL}${path}`, {
-    ...init,
-    headers,
-    cache: "no-store",
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || `Request failed (${res.status})`);
-  }
-
-  return (await res.json()) as T;
+  throw new Error(errors.join(" | "));
 }
 
 export function getDashboardOverview(accessToken?: string) {
