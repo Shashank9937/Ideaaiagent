@@ -34,9 +34,12 @@ def _build_engine_config(raw_database_url: str) -> tuple[str, dict]:
 
     normalized_url = str(parsed.set(query=query))
     
-    # Explicitly enforce SSL for Supabase connections to avoid ambiguity
-    if "supabase.com" in parsed.host or "supabase.co" in parsed.host:
+    # Explicitly enforce SSL and disable statement cache for Supabase connections
+    is_supabase = parsed.host and ("supabase.com" in parsed.host or "supabase.co" in parsed.host)
+    if is_supabase:
         connect_args["ssl"] = "require"
+        # Always disable statement cache for any Supabase/Pooler connection to stay safe
+        connect_args["statement_cache_size"] = 0
         
     return normalized_url, connect_args
 
@@ -47,12 +50,15 @@ normalized_database_url, engine_connect_args = _build_engine_config(settings.dat
 try:
     from sqlalchemy.engine.url import make_url
     debug_url = make_url(normalized_database_url)
+    user_info = f"{debug_url.username}"
     if debug_url.password:
-        debug_url = debug_url.set(password="***MASKED***")
-    print(f"DEBUG - Connecting to Database URL: {debug_url}", flush=True)
+        user_info += ":***"
+    
+    print(f"DEBUG - Attempting connection to: {debug_url.host}:{debug_url.port or 5432}/{debug_url.database}", flush=True)
     print(f"DEBUG - User: {debug_url.username}", flush=True)
-    print(f"DEBUG - Host: {debug_url.host}", flush=True)
-    print(f"DEBUG - Port: {debug_url.port}", flush=True)
+    print(f"DEBUG - SSL Config: {engine_connect_args.get('ssl')}", flush=True)
+    print(f"DEBUG - Statement Cache Size: {engine_connect_args.get('statement_cache_size')}", flush=True)
+    print(f"DEBUG - Final URL Host: {debug_url.host}", flush=True)
 except Exception as e:
     print(f"DEBUG - Error inspecting URL: {e}", flush=True)
 
