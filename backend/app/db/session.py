@@ -49,16 +49,17 @@ normalized_database_url, engine_connect_args = _build_engine_config(settings.dat
 # Debug: Print the URL being used (masking password)
 try:
     from sqlalchemy.engine.url import make_url
-    debug_url = make_url(normalized_database_url)
-    user_info = f"{debug_url.username}"
-    if debug_url.password:
-        user_info += ":***"
+    import os
     
+    source = "SUPABASE_DATABASE_URL" if os.getenv("SUPABASE_DATABASE_URL") else "DATABASE_URL"
+    debug_url = make_url(normalized_database_url)
+    
+    pass_len = len(debug_url.password) if debug_url.password else 0
+    print(f"DEBUG - Connection source: {source}", flush=True)
     print(f"DEBUG - Attempting connection to: {debug_url.host}:{debug_url.port or 5432}/{debug_url.database}", flush=True)
     print(f"DEBUG - User: {debug_url.username}", flush=True)
+    print(f"DEBUG - Password Length: {pass_len}", flush=True)
     print(f"DEBUG - SSL Config: {engine_connect_args.get('ssl')}", flush=True)
-    print(f"DEBUG - Statement Cache Size: {engine_connect_args.get('statement_cache_size')}", flush=True)
-    print(f"DEBUG - Final URL Host: {debug_url.host}", flush=True)
 except Exception as e:
     print(f"DEBUG - Error inspecting URL: {e}", flush=True)
 
