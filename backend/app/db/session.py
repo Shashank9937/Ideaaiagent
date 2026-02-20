@@ -1,4 +1,5 @@
 from collections.abc import AsyncGenerator
+import logging
 from urllib.parse import urlparse
 
 from sqlalchemy.engine import make_url
@@ -6,6 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from sqlalchemy.orm import DeclarativeBase
 
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class Base(DeclarativeBase):
@@ -22,6 +25,29 @@ def _extract_supabase_project_ref(supabase_url: str | None) -> str | None:
     return host.split(".", 1)[0] or None
 
 
+def _is_placeholder_password(value: str | None) -> bool:
+    if value is None:
+        return False
+    password = value.strip()
+    if not password:
+        return True
+    lowered = password.lower()
+    if set(password) == {"*"}:
+        return True
+    if set(lowered) == {"x"}:
+        return True
+    placeholders = {
+        "password",
+        "your_password",
+        "your-password",
+        "<your_password>",
+        "[your-password]",
+        "changeme",
+        "temp_password",
+    }
+    return lowered in placeholders
+
+
 def _build_engine_config(raw_database_url: str) -> tuple[str, dict]:
     """
     Normalize DB URL query params and prepare asyncpg-specific connect args.
@@ -33,8 +59,16 @@ def _build_engine_config(raw_database_url: str) -> tuple[str, dict]:
     is_supabase_pooler = bool(parsed.host and parsed.host.endswith("pooler.supabase.com"))
 
     # Allows plain-text password via env without manual URL encoding.
-    if settings.database_password:
+    if settings.database_password and not _is_placeholder_password(settings.database_password):
         parsed = parsed.set(password=settings.database_password)
+    elif settings.database_password and _is_placeholder_password(settings.database_password):
+        logger.warning("Ignoring placeholder DATABASE_PASSWORD value; using password from SUPABASE_DATABASE_URL.")
+
+    if _is_placeholder_password(parsed.password):
+        logger.error(
+            "Database URL appears to contain a placeholder password. "
+            "Set DATABASE_PASSWORD in Render to your real Supabase DB password."
+        )
 
     # Supabase pooler username must include the project ref.
     if is_supabase_pooler and parsed.username == "postgres":
@@ -73,22 +107,6 @@ def _build_engine_config(raw_database_url: str) -> tuple[str, dict]:
 
 
 normalized_database_url, engine_connect_args = _build_engine_config(settings.database_url)
-
-# Diagnostics
-print("\n" + "!"*60, flush=True)
-print("📢 DB CONNECTION DIAGNOSTICS", flush=True)
-from sqlalchemy.engine.url import make_url
-url_obj = make_url(normalized_database_url)
-pass_val = url_obj.password or ""
-pass_len = len(pass_val)
-pass_preview = f"{pass_val[0]}...{pass_val[-1]}" if pass_len > 2 else "TOO SHORT"
-print(f"Target: {url_obj.host}:{url_obj.port}", flush=True)
-print(f"User: {url_obj.username}", flush=True)
-print(f"Password Length: {pass_len}", flush=True)
-print(f"Password Preview: {pass_preview}", flush=True)
-if pass_val == "***":
-    print("🚨 WARNING: Your password is set to '***'. Re-enter it in Render!", flush=True)
-print("!"*60 + "\n", flush=True)
 
 engine = create_async_engine(
     normalized_database_url,

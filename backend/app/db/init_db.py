@@ -23,8 +23,10 @@ async def init_db() -> None:
     retries = max(1, settings.db_init_retries)
     delay_seconds = max(0.5, settings.db_init_retry_delay_seconds)
     last_error: Exception | None = None
+    attempts_made = 0
 
     for attempt in range(1, retries + 1):
+        attempts_made = attempt
         try:
             async with engine.begin() as conn:
                 await conn.run_sync(Base.metadata.create_all)
@@ -51,7 +53,7 @@ async def init_db() -> None:
             if attempt < retries:
                 await asyncio.sleep(delay_seconds)
 
-    message = f"Database initialization failed after {retries} attempts."
+    message = f"Database initialization failed after {attempts_made}/{retries} attempts."
     if settings.fail_on_db_init_error:
         raise RuntimeError(message) from last_error
 
