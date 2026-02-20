@@ -38,6 +38,19 @@ def _build_engine_config(raw_database_url: str) -> tuple[str, dict]:
 
 normalized_database_url, engine_connect_args = _build_engine_config(settings.database_url)
 
+# Debug: Print the URL being used (masking password)
+try:
+    from sqlalchemy.engine.url import make_url
+    debug_url = make_url(normalized_database_url)
+    if debug_url.password:
+        debug_url = debug_url.set(password="***MASKED***")
+    print(f"DEBUG - Connecting to Database URL: {debug_url}", flush=True)
+    print(f"DEBUG - User: {debug_url.username}", flush=True)
+    print(f"DEBUG - Host: {debug_url.host}", flush=True)
+    print(f"DEBUG - Port: {debug_url.port}", flush=True)
+except Exception as e:
+    print(f"DEBUG - Error inspecting URL: {e}", flush=True)
+
 engine = create_async_engine(
     normalized_database_url,
     connect_args=engine_connect_args,
