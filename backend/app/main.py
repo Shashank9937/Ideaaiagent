@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import logging
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,15 +10,28 @@ from app.core.config import settings
 from app.db.init_db import init_db
 from app.jobs.scheduler import scheduler_manager
 
+logger = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    await init_db()
-    scheduler_manager.start()
+    try:
+        await init_db()
+    except Exception:  # noqa: BLE001
+        logger.exception("Database bootstrap failed during startup; continuing service startup.")
+
+    try:
+        scheduler_manager.start()
+    except Exception:  # noqa: BLE001
+        logger.exception("Scheduler failed to start; continuing service startup.")
+
     try:
         yield
     finally:
-        scheduler_manager.shutdown()
+        try:
+            scheduler_manager.shutdown()
+        except Exception:  # noqa: BLE001
+            logger.exception("Scheduler shutdown encountered an error.")
 
 
 app = FastAPI(
