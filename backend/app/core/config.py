@@ -23,13 +23,6 @@ class Settings(BaseSettings):
             "database_url",
         )
     )
-    database_password: str | None = Field(
-        default=None,
-        validation_alias=AliasChoices(
-            "DATABASE_PASSWORD",
-            "database_password",
-        )
-    )
     cors_origins: list[str] = ["http://localhost:3000"]
 
     openai_api_key: str | None = None
@@ -63,6 +56,9 @@ class Settings(BaseSettings):
     ]
     default_geo_scope: str = "GLOBAL"
     default_industries: list[str] = ["SaaS", "AI", "B2B"]
+    db_init_retries: int = 10
+    db_init_retry_delay_seconds: float = 3.0
+    fail_on_db_init_error: bool = False
 
     @field_validator("database_url", mode="before")
     @classmethod
