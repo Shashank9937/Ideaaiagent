@@ -17,58 +17,41 @@ def _build_engine_config(raw_database_url: str) -> tuple[str, dict]:
     This avoids prepared statement issues when using PgBouncer poolers.
     """
     parsed = make_url(raw_database_url)
-    
-    # If a separate password is provided, prioritize it
-    if settings.database_password:
-        parsed = parsed.set(password=settings.database_password)
-        
     query = dict(parsed.query)
     connect_args: dict = {}
+    is_supabase_pooler = bool(parsed.host and parsed.host.endswith("pooler.supabase.com"))
+
+    # Supabase pooler should use 6543 (5432 is for direct DB host).
+    if is_supabase_pooler and parsed.port in (None, 5432):
+        parsed = parsed.set(port=6543)
+
+    # asyncpg expects `ssl`, not `sslmode`; normalize when needed.
+    sslmode_value = query.pop("sslmode", None)
+    if sslmode_value and "ssl" not in query:
+        if str(sslmode_value).lower() in {"require", "verify-ca", "verify-full"}:
+            query["ssl"] = "require"
+
+    if is_supabase_pooler and "ssl" not in query:
+        query["ssl"] = "require"
 
     statement_cache_value = query.pop("statement_cache_size", None)
+    prepared_statement_cache_value = query.pop("prepared_statement_cache_size", None)
     if statement_cache_value is None:
-        statement_cache_value = query.pop("prepared_statement_cache_size", None)
+        statement_cache_value = prepared_statement_cache_value
 
     if statement_cache_value is not None:
         try:
             connect_args["statement_cache_size"] = int(statement_cache_value)
         except (TypeError, ValueError):
             connect_args["statement_cache_size"] = 0
-    elif parsed.host and "pooler.supabase.com" in parsed.host:
+    elif is_supabase_pooler:
         connect_args["statement_cache_size"] = 0
 
     normalized_url = str(parsed.set(query=query))
-    
-    # Explicitly enforce SSL and disable statement cache for Supabase connections
-    is_supabase = parsed.host and ("supabase.com" in parsed.host or "supabase.co" in parsed.host)
-    if is_supabase:
-        connect_args["ssl"] = "require"
-        # Always disable statement cache for any Supabase/Pooler connection to stay safe
-        connect_args["statement_cache_size"] = 0
-        
     return normalized_url, connect_args
 
 
 normalized_database_url, engine_connect_args = _build_engine_config(settings.database_url)
-
-# Debug: Print the URL being used (masking password)
-try:
-    from sqlalchemy.engine.url import make_url
-    import os
-    
-    source = "SUPABASE_DATABASE_URL" if os.getenv("SUPABASE_DATABASE_URL") else "DATABASE_URL"
-    debug_url = make_url(normalized_database_url)
-    
-    pass_len = len(debug_url.password) if debug_url.password else 0
-    pass_preview = f"{debug_url.password[0]}...{debug_url.password[-1]}" if pass_len > 2 else "TOO SHORT"
-    
-    print(f"DEBUG - Connection source: {source}", flush=True)
-    print(f"DEBUG - Attempting connection to: {debug_url.host}:{debug_url.port or 5432}/{debug_url.database}", flush=True)
-    print(f"DEBUG - User: {debug_url.username}", flush=True)
-    print(f"DEBUG - Password Length: {pass_len} (Preview: {pass_preview})", flush=True)
-    print(f"DEBUG - SSL Config: {engine_connect_args.get('ssl')}", flush=True)
-except Exception as e:
-    print(f"DEBUG - Error inspecting URL: {e}", flush=True)
 
 engine = create_async_engine(
     normalized_database_url,
