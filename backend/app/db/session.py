@@ -48,6 +48,15 @@ def _is_placeholder_password(value: str | None) -> bool:
     return lowered in placeholders
 
 
+def _normalize_password(value: str | None) -> str | None:
+    if value is None:
+        return None
+    password = value.strip()
+    if len(password) >= 2 and password[0] == password[-1] and password[0] in {"'", '"'}:
+        password = password[1:-1].strip()
+    return password or None
+
+
 def _build_engine_config(raw_database_url: str) -> tuple[str, dict]:
     """
     Normalize DB URL query params and prepare asyncpg-specific connect args.
@@ -58,16 +67,26 @@ def _build_engine_config(raw_database_url: str) -> tuple[str, dict]:
     connect_args: dict = {}
     is_supabase_pooler = bool(parsed.host and parsed.host.endswith("pooler.supabase.com"))
 
-    # Allows plain-text password via env without manual URL encoding.
-    if settings.database_password and not _is_placeholder_password(settings.database_password):
-        parsed = parsed.set(password=settings.database_password)
-    elif settings.database_password and _is_placeholder_password(settings.database_password):
+    # Prefer password already embedded in SUPABASE_DATABASE_URL.
+    url_password = _normalize_password(parsed.password)
+    env_password = _normalize_password(settings.database_password)
+
+    if url_password and not _is_placeholder_password(url_password):
+        if env_password and not _is_placeholder_password(env_password) and env_password != url_password:
+            logger.warning(
+                "Ignoring DATABASE_PASSWORD because SUPABASE_DATABASE_URL already contains a different password."
+            )
+    elif env_password and not _is_placeholder_password(env_password):
+        # Allows plain-text password via env without manual URL encoding.
+        parsed = parsed.set(password=env_password)
+    elif env_password and _is_placeholder_password(env_password):
         logger.warning("Ignoring placeholder DATABASE_PASSWORD value; using password from SUPABASE_DATABASE_URL.")
 
-    if _is_placeholder_password(parsed.password):
+    final_password = _normalize_password(parsed.password)
+    if not final_password or _is_placeholder_password(final_password):
         logger.error(
-            "Database URL appears to contain a placeholder password. "
-            "Set DATABASE_PASSWORD in Render to your real Supabase DB password."
+            "No valid database password configured. "
+            "Set SUPABASE_DATABASE_URL with real password or DATABASE_PASSWORD in Render."
         )
 
     # Supabase pooler username must include the project ref.
