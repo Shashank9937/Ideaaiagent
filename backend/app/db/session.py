@@ -55,10 +55,12 @@ try:
     debug_url = make_url(normalized_database_url)
     
     pass_len = len(debug_url.password) if debug_url.password else 0
+    pass_preview = f"{debug_url.password[0]}...{debug_url.password[-1]}" if pass_len > 2 else "TOO SHORT"
+    
     print(f"DEBUG - Connection source: {source}", flush=True)
     print(f"DEBUG - Attempting connection to: {debug_url.host}:{debug_url.port or 5432}/{debug_url.database}", flush=True)
     print(f"DEBUG - User: {debug_url.username}", flush=True)
-    print(f"DEBUG - Password Length: {pass_len}", flush=True)
+    print(f"DEBUG - Password Length: {pass_len} (Preview: {pass_preview})", flush=True)
     print(f"DEBUG - SSL Config: {engine_connect_args.get('ssl')}", flush=True)
 except Exception as e:
     print(f"DEBUG - Error inspecting URL: {e}", flush=True)
