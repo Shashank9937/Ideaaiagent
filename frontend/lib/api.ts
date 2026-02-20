@@ -1,6 +1,6 @@
 import type { AdminFilters, ClusterDetail, DashboardOverview, Idea, ProblemCluster } from "@/lib/types";
 
-const API_BASE_URL = "/api/v1";
+const API_BASE_URL = "/api/proxy";
 
 async function apiRequest<T>(path: string, accessToken?: string, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers);

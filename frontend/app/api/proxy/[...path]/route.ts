@@ -6,12 +6,25 @@ const DEFAULT_BACKEND_BASE_URL =
     : "https://ideaaiagent.onrender.com/api/v1";
 
 function getBackendBaseUrl() {
-  const configured = process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? DEFAULT_BACKEND_BASE_URL;
+  const configured = process.env.API_BASE_URL ?? DEFAULT_BACKEND_BASE_URL;
   return configured.replace(/\/+$/, "");
 }
 
 async function proxyRequest(request: NextRequest, path: string[]) {
-  const target = `${getBackendBaseUrl()}/${path.join("/")}${request.nextUrl.search}`;
+  const backendBaseUrl = getBackendBaseUrl();
+  const target = `${backendBaseUrl}/${path.join("/")}${request.nextUrl.search}`;
+  const targetUrl = new URL(target);
+
+  // Prevent self-referential proxy loops caused by wrong API_BASE_URL.
+  if (targetUrl.host === request.nextUrl.host) {
+    return Response.json(
+      {
+        error: "Invalid API_BASE_URL configuration",
+        message: "API_BASE_URL points to frontend host. Set it to backend /api/v1 URL.",
+      },
+      { status: 500 },
+    );
+  }
 
   const headers = new Headers(request.headers);
   headers.delete("host");
