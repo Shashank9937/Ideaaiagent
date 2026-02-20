@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     environment: Literal["development", "staging", "production"] = "development"
     api_v1_prefix: str = "/api/v1"
 
-    database_url: str = Field(validation_alias=AliasChoices("DATABASE_URL", "POSTGRES_URL", "database_url"))
+    database_url: str = Field(validation_alias=AliasChoices("POSTGRES_URL", "DATABASE_URL", "database_url"))
     cors_origins: list[str] = ["http://localhost:3000"]
 
     openai_api_key: str | None = None
