@@ -33,6 +33,11 @@ def _build_engine_config(raw_database_url: str) -> tuple[str, dict]:
         connect_args["statement_cache_size"] = 0
 
     normalized_url = str(parsed.set(query=query))
+    
+    # Explicitly enforce SSL for Supabase connections to avoid ambiguity
+    if "supabase.com" in parsed.host or "supabase.co" in parsed.host:
+        connect_args["ssl"] = "require"
+        
     return normalized_url, connect_args
 
 
