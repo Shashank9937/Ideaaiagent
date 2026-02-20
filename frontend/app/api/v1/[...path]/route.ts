@@ -10,6 +10,13 @@ function getBackendBaseUrl() {
   return configured.replace(/\/+$/, "");
 }
 
+function toErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
+}
+
 async function proxyRequest(request: NextRequest, path: string[]) {
   const backendBaseUrl = getBackendBaseUrl();
   const target = `${backendBaseUrl}/${path.join("/")}${request.nextUrl.search}`;
@@ -25,10 +32,14 @@ async function proxyRequest(request: NextRequest, path: string[]) {
     );
   }
 
-  const headers = new Headers(request.headers);
-  headers.delete("host");
-  headers.delete("connection");
-  headers.delete("content-length");
+  const headers = new Headers();
+  const contentType = request.headers.get("content-type");
+  const authorization = request.headers.get("authorization");
+  const accept = request.headers.get("accept");
+
+  if (contentType) headers.set("content-type", contentType);
+  if (authorization) headers.set("authorization", authorization);
+  if (accept) headers.set("accept", accept);
 
   const init: RequestInit = {
     method: request.method,
@@ -41,7 +52,19 @@ async function proxyRequest(request: NextRequest, path: string[]) {
     init.body = await request.arrayBuffer();
   }
 
-  const upstream = await fetch(target, init);
+  let upstream: Response;
+  try {
+    upstream = await fetch(target, init);
+  } catch (error) {
+    return Response.json(
+      {
+        error: "Upstream fetch failed",
+        target,
+        message: toErrorMessage(error),
+      },
+      { status: 502 },
+    );
+  }
   const responseHeaders = new Headers(upstream.headers);
 
   return new Response(await upstream.arrayBuffer(), {
