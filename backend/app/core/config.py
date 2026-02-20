@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import field_validator
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     environment: Literal["development", "staging", "production"] = "development"
     api_v1_prefix: str = "/api/v1"
 
-    database_url: str
+    database_url: str = Field(validation_alias=AliasChoices("DATABASE_URL", "POSTGRES_URL", "database_url"))
     cors_origins: list[str] = ["http://localhost:3000"]
 
     openai_api_key: str | None = None
@@ -46,6 +46,25 @@ class Settings(BaseSettings):
     ]
     default_geo_scope: str = "GLOBAL"
     default_industries: list[str] = ["SaaS", "AI", "B2B"]
+
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def normalize_database_url(cls, value: str | None) -> str:
+        if value is None or not str(value).strip():
+            raise ValueError("DATABASE_URL (or POSTGRES_URL) is required")
+
+        url = str(value).strip()
+        if url.startswith("postgresql+asyncpg://"):
+            return url
+        if url.startswith("postgres://"):
+            return "postgresql+asyncpg://" + url[len("postgres://") :]
+        if url.startswith("postgresql://"):
+            return "postgresql+asyncpg://" + url[len("postgresql://") :]
+        if url.startswith("postgresql+psycopg://"):
+            return "postgresql+asyncpg://" + url[len("postgresql+psycopg://") :]
+        if url.startswith("postgresql+psycopg2://"):
+            return "postgresql+asyncpg://" + url[len("postgresql+psycopg2://") :]
+        return url
 
     @field_validator("cors_origins", "reddit_subreddits", "default_keywords", "default_industries", mode="before")
     @classmethod
