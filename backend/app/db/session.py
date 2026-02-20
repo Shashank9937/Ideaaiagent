@@ -127,6 +127,21 @@ def _build_engine_config(raw_database_url: str) -> tuple[str, dict]:
 
 normalized_database_url, engine_connect_args = _build_engine_config(settings.database_url)
 
+# Diagnostics
+logger.warning("\n" + "!" * 60)
+logger.warning("📢 DB CONNECTION DIAGNOSTICS")
+url_obj = make_url(normalized_database_url)
+pass_val = url_obj.password or ""
+pass_len = len(pass_val)
+pass_preview = f"{pass_val[0]}...{pass_val[-1]}" if pass_len > 2 else "TOO SHORT"
+logger.warning("Target: %s:%s", url_obj.host, url_obj.port or 5432)
+logger.warning("User: %s", url_obj.username)
+logger.warning("Password Length: %s", pass_len)
+logger.warning("Password Preview: %s", pass_preview)
+if pass_val == "***":
+    logger.warning("🚨 WARNING: Your password is set to '***'. Re-enter it in Render!")
+logger.warning("!" * 60 + "\n")
+
 engine = create_async_engine(
     normalized_database_url,
     connect_args=engine_connect_args,
