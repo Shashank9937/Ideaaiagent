@@ -51,7 +51,38 @@ def _build_engine_config(raw_database_url: str) -> tuple[str, dict]:
     return normalized_url, connect_args
 
 
-normalized_database_url, engine_connect_args = _build_engine_config(settings.database_url)
+# If a separate password is provided, prioritize it
+if settings.database_password:
+    parsed_config = make_url(settings.database_url)
+    modified_url = str(parsed_config.set(password=settings.database_password))
+    normalized_database_url, engine_connect_args = _build_engine_config(modified_url)
+else:
+    normalized_database_url, engine_connect_args = _build_engine_config(settings.database_url)
+
+# Diagnostics
+try:
+    import os
+    from sqlalchemy.engine.url import make_url
+    
+    source = "SUPABASE_DATABASE_URL" if os.getenv("SUPABASE_DATABASE_URL") else "DATABASE_URL"
+    has_pass_env = "YES" if os.getenv("DATABASE_PASSWORD") else "NO"
+    
+    url_obj = make_url(normalized_database_url)
+    pass_val = url_obj.password or ""
+    pass_len = len(pass_val)
+    pass_preview = f"{pass_val[0]}...{pass_val[-1]}" if pass_len > 2 else "TOO SHORT"
+    
+    print("\n" + "="*50, flush=True)
+    print("📢 DATABASE CONNECTION DIAGNOSTICS", flush=True)
+    print(f"Env Vars Found: DB_PASS_ENV={has_pass_env}, SOURCE={source}", flush=True)
+    print(f"Target: {url_obj.host}:{url_obj.port or 5432}/{url_obj.database}", flush=True)
+    print(f"User: {url_obj.username}", flush=True)
+    print(f"Password Length: {pass_len} (Preview: {pass_preview})", flush=True)
+    if pass_val == "***":
+        print("⚠️ WARNING: Your password is literally '***'. You likely copied mask dots!", flush=True)
+    print("="*50 + "\n", flush=True)
+except Exception as e:
+    print(f"DEBUG - Diagnostic Error: {e}", flush=True)
 
 engine = create_async_engine(
     normalized_database_url,
