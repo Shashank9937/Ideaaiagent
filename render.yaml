@@ -12,7 +12,9 @@ services:
       - key: API_V1_PREFIX
         value: /api/v1
       - key: ALLOW_ANON_READ
-        value: false
+        value: true
+      - key: CORS_ORIGINS
+        value: "*"
       - key: SUPABASE_DATABASE_URL
         sync: false
       - key: DATABASE_PASSWORD

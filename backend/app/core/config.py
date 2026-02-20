@@ -32,7 +32,7 @@ class Settings(BaseSettings):
             "database_password",
         ),
     )
-    cors_origins: list[str] = ["http://localhost:3000"]
+    cors_origins: list[str] = ["*"]
 
     openai_api_key: str | None = None
     openai_model: str = "gpt-4o-mini"
