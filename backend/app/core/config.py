@@ -91,7 +91,7 @@ def get_settings() -> Settings:
     loaded = Settings(database_url=supabase_override) if supabase_override else Settings()
 
     parsed = urlparse(loaded.database_url)
-    logger.info(
+    logger.warning(
         "Database target resolved: user=%s host=%s port=%s",
         parsed.username,
         parsed.hostname,
