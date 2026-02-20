@@ -1,14 +1,8 @@
 import type { AdminFilters, ClusterDetail, DashboardOverview, Idea, ProblemCluster } from "@/lib/types";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
-  (process.env.NODE_ENV === "development" ? "http://localhost:8000/api/v1" : "");
+const API_BASE_URL = "/api/proxy";
 
 async function apiRequest<T>(path: string, accessToken?: string, init?: RequestInit): Promise<T> {
-  if (!API_BASE_URL) {
-    throw new Error("NEXT_PUBLIC_API_BASE_URL is missing");
-  }
-
   const headers = new Headers(init?.headers);
   headers.set("Content-Type", "application/json");
   if (accessToken) {
