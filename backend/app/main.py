@@ -48,4 +48,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.get("/", tags=["health"])
+async def root() -> dict[str, str]:
+    return {"name": settings.app_name, "status": "ok", "health": "/api/v1/health"}
+
+
+@app.get("/health", tags=["health"])
+async def health_alias() -> dict[str, str]:
+    return {"status": "ok"}
+
+
 app.include_router(api_router, prefix=settings.api_v1_prefix)
