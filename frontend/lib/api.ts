@@ -26,6 +26,15 @@ const EMPTY_DASHBOARD: DashboardOverview = {
   },
 };
 
+const EMPTY_ADMIN_FILTERS: AdminFilters = {
+  id: 1,
+  include_keywords: [],
+  exclude_keywords: [],
+  geo_scope: "GLOBAL",
+  industries: ["SaaS"],
+  updated_at: null,
+};
+
 function isoNow() {
   return new Date().toISOString();
 }
@@ -127,14 +136,7 @@ export function getIdeaById(ideaId: string, accessToken?: string) {
 }
 
 export function getAdminFilters(accessToken?: string) {
-  return apiRequest<AdminFilters>("/admin/filters", accessToken).catch(() => ({
-    id: 1,
-    include_keywords: [],
-    exclude_keywords: [],
-    geo_scope: "GLOBAL",
-    industries: ["SaaS"],
-    updated_at: null,
-  }));
+  return apiRequest<AdminFilters>("/admin/filters", accessToken).catch(() => EMPTY_ADMIN_FILTERS);
 }
 
 export function updateAdminFilters(payload: Omit<AdminFilters, "id" | "updated_at">, accessToken?: string) {
