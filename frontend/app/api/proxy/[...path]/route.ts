@@ -4,10 +4,19 @@ const DEFAULT_BACKEND_BASE_URL =
   process.env.NODE_ENV === "development"
     ? "http://localhost:8000/api/v1"
     : "https://ideaaiagent.onrender.com/api/v1";
+const SECONDARY_BACKEND_BASE_URL = "https://market-war-radar-api.onrender.com/api/v1";
 
-function getBackendBaseUrl() {
-  const configured = process.env.API_BASE_URL ?? DEFAULT_BACKEND_BASE_URL;
-  return configured.replace(/\/+$/, "");
+function getBackendBaseUrls() {
+  const candidates = [
+    process.env.API_BASE_URL,
+    process.env.NEXT_PUBLIC_API_BASE_URL,
+    DEFAULT_BACKEND_BASE_URL,
+    SECONDARY_BACKEND_BASE_URL,
+  ]
+    .filter((value): value is string => Boolean(value))
+    .map((value) => value.replace(/\/+$/, ""));
+
+  return Array.from(new Set(candidates));
 }
 
 function toErrorMessage(error: unknown) {
@@ -18,21 +27,6 @@ function toErrorMessage(error: unknown) {
 }
 
 async function proxyRequest(request: NextRequest, path: string[]) {
-  const backendBaseUrl = getBackendBaseUrl();
-  const target = `${backendBaseUrl}/${path.join("/")}${request.nextUrl.search}`;
-  const targetUrl = new URL(target);
-
-  // Prevent self-referential proxy loops caused by wrong API_BASE_URL.
-  if (targetUrl.host === request.nextUrl.host) {
-    return Response.json(
-      {
-        error: "Invalid API_BASE_URL configuration",
-        message: "API_BASE_URL points to frontend host. Set it to backend /api/v1 URL.",
-      },
-      { status: 500 },
-    );
-  }
-
   const headers = new Headers();
   const contentType = request.headers.get("content-type");
   const authorization = request.headers.get("authorization");
@@ -53,25 +47,38 @@ async function proxyRequest(request: NextRequest, path: string[]) {
     init.body = await request.arrayBuffer();
   }
 
-  let upstream: Response;
-  try {
-    upstream = await fetch(target, init);
-  } catch (error) {
-    return Response.json(
-      {
-        error: "Upstream fetch failed",
-        target,
-        message: toErrorMessage(error),
-      },
-      { status: 502 },
-    );
-  }
-  const responseHeaders = new Headers(upstream.headers);
+  const attempts: string[] = [];
+  for (const backendBaseUrl of getBackendBaseUrls()) {
+    const target = `${backendBaseUrl}/${path.join("/")}${request.nextUrl.search}`;
+    const targetUrl = new URL(target);
+    if (targetUrl.host === request.nextUrl.host) {
+      attempts.push(`${target} -> skipped self host`);
+      continue;
+    }
 
-  return new Response(await upstream.arrayBuffer(), {
-    status: upstream.status,
-    headers: responseHeaders,
-  });
+    try {
+      const upstream = await fetch(target, init);
+      if (upstream.ok) {
+        const responseHeaders = new Headers(upstream.headers);
+        return new Response(await upstream.arrayBuffer(), {
+          status: upstream.status,
+          headers: responseHeaders,
+        });
+      }
+      const body = await upstream.text();
+      attempts.push(`${target} -> ${upstream.status}${body ? `: ${body}` : ""}`);
+    } catch (error) {
+      attempts.push(`${target} -> ${toErrorMessage(error)}`);
+    }
+  }
+
+  return Response.json(
+    {
+      error: "All upstream backends failed",
+      attempts,
+    },
+    { status: 502 },
+  );
 }
 
 type RouteContext = {

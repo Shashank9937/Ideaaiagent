@@ -4,6 +4,7 @@ const API_BASE_CANDIDATES = [
   "/api/v1",
   process.env.NEXT_PUBLIC_API_BASE_URL,
   process.env.NODE_ENV === "development" ? "http://localhost:8000/api/v1" : "https://ideaaiagent.onrender.com/api/v1",
+  "https://market-war-radar-api.onrender.com/api/v1",
 ].filter((value): value is string => Boolean(value));
 
 const EMPTY_DASHBOARD: DashboardOverview = {
