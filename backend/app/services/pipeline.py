@@ -34,6 +34,8 @@ class PipelineOrchestrator:
     async def run_full_pipeline(self) -> dict[str, int]:
         admin_filter = await self._get_or_create_filter()
         raw_posts = await self._collect_posts(admin_filter)
+        if not raw_posts:
+            raw_posts = self._build_demo_posts(admin_filter)
         created_posts = await self._persist_posts(raw_posts)
         extracted_count = await self._extract_pains(created_posts, admin_filter)
         clusters = await self.cluster_engine.cluster_unassigned_pains(self.db)
@@ -122,6 +124,79 @@ class PipelineOrchestrator:
             deduped_by_url[f"{item.platform}:{item.url}"] = item
 
         return list(deduped_by_url.values())
+
+    def _build_demo_posts(self, admin_filter: AdminFilter) -> list[RawPost]:
+        now = datetime.now(timezone.utc)
+        industry_hint = (admin_filter.industries[0] if admin_filter.industries else "SaaS").lower()
+        geo_hint = "India" if admin_filter.geo_scope == "INDIA" else "Global"
+
+        seed = [
+            (
+                "Manual onboarding is eating our team alive",
+                "We run a growing B2B SaaS and onboarding is still manual with spreadsheets and Slack pings. "
+                "Need automation urgently because churn is increasing and implementation delays hurt revenue.",
+                92,
+                31,
+                "https://example.com/demo/reddit/onboarding-automation",
+            ),
+            (
+                "Customer success team buried in repetitive follow-ups",
+                "Our ops team spends hours sending reminders, collecting docs, and updating CRM. "
+                "Looking for an AI workflow that handles repetitive tasks and alerts for at-risk accounts.",
+                74,
+                18,
+                "https://example.com/demo/reddit/customer-success-followups",
+            ),
+            (
+                "We cannot trust our dashboard data anymore",
+                "Data from billing, product, and support is fragmented. Decisions are slow because nobody trusts numbers. "
+                "Need one reliable intelligence layer for growth planning.",
+                68,
+                22,
+                "https://example.com/demo/producthunt/data-fragmentation",
+            ),
+            (
+                "Founder doing support at midnight every day",
+                "Support load is exploding after recent launch. We need AI triage plus playbooks to reduce response time "
+                "without hiring a full support team immediately.",
+                81,
+                27,
+                "https://example.com/demo/twitter/support-triage",
+            ),
+            (
+                "Sales pipeline stalled due to poor qualification",
+                "Leads come in but reps waste time on bad-fit prospects. Need a qualification assistant tied to calls and "
+                "inbound forms so pipeline velocity improves.",
+                59,
+                16,
+                "https://example.com/demo/twitter/sales-qualification",
+            ),
+            (
+                "Finance ops takes 5 days to close monthly books",
+                "Too many tools and manual reconciliations. Errors keep happening and founder visibility is delayed. "
+                "Need automated close workflow with audit trail.",
+                65,
+                19,
+                "https://example.com/demo/producthunt/finance-close-automation",
+            ),
+        ]
+
+        posts: list[RawPost] = []
+        for index, (title, content, upvotes, comments, url) in enumerate(seed):
+            platform = "reddit" if index % 3 == 0 else ("twitter" if index % 3 == 1 else "producthunt")
+            posts.append(
+                RawPost(
+                    platform=platform,
+                    title=f"{title} ({geo_hint}, {industry_hint})",
+                    content=f"{content} Context: {geo_hint} market focus in {industry_hint}.",
+                    upvotes=upvotes,
+                    comments=comments,
+                    url=url,
+                    created_at=now - timedelta(hours=index * 4),
+                )
+            )
+
+        return posts
 
     def _apply_manual_filters(self, posts: list[RawPost], admin_filter: AdminFilter) -> list[RawPost]:
         exclude = [keyword.lower() for keyword in admin_filter.exclude_keywords]
